@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">TaggingMaterials</string>
+    <string name="search_text_field">SearchTextField</string>
+</resources>
