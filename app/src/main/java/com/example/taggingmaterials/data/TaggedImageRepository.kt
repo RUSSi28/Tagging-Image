@@ -1,10 +1,9 @@
 package com.example.taggingmaterials.data
 
-import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
-import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
-class TaggedImageRepository @Inject constructor(
-    taggedImageDao: TaggedImageDao
-): TaggedImageRepositoryImpl {
-
+interface TaggedImageRepository {
+    suspend fun insertTaggedImage(taggedImage: TaggedImage)
+    suspend fun deleteTaggedImage(taggedImage: TaggedImage)
+    fun getTaggedImage() : Flow<List<TaggedImage>>
 }
