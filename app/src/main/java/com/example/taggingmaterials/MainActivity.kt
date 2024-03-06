@@ -1,7 +1,11 @@
 package com.example.taggingmaterials
 
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
@@ -41,14 +45,54 @@ import com.example.taggingmaterials.screen.MainScreen
 import com.example.taggingmaterials.ui.theme.TaggingMaterialsTheme
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val requestImagePermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            if (it) {
+                pickMedia.launch(
+                    PickVisualMediaRequest(
+                        ActivityResultContracts.PickVisualMedia.SingleMimeType("image/*")
+                    )
+                )
+            } else {
+                //TODO : 許可するように誘導するテキストの表示にする
+                val context : Context = this
+                Toast.makeText(context, R.string.app_name, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private fun checkImagePermissions() {
+        val context: Context = applicationContext
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            android.Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        if (ContextCompat.checkSelfPermission(
+                context,
+                permission
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            pickMedia.launch(
+                PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.SingleMimeType("image/*")
+                )
+            )
+        } else {
+            requestImagePermissionLauncher.launch(permission)
+        }
+    }
+
     private val taggingMaterialViewModel: TaggingMaterialViewModel by viewModels()
-    val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         // Callback is invoked after the user selects a media item or closes the
         // photo picker.
         if (uri != null) {
@@ -58,6 +102,7 @@ class MainActivity : ComponentActivity() {
             Log.d("PhotoPicker", "No media selected")
         }
     }
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,13 +122,13 @@ class MainActivity : ComponentActivity() {
                     Box {
                         MainScreen(taggingMaterialViewModel)
                         if (taggingMaterialViewModel.canGetUri()) {
-                            var tag by remember{ mutableStateOf("") }
+                            var tag by remember { mutableStateOf("") }
                             AlertDialog(
                                 onDismissRequest = { taggingMaterialViewModel.inputImageUri = "" },
                             ) {
-                                Card (
+                                Card(
                                     shape = RoundedCornerShape(8.dp)
-                                ){
+                                ) {
                                     LazyColumn() {
                                         item {
                                             Box(
@@ -100,7 +145,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         }
-                                        item (key = "TextField"){
+                                        item(key = "TextField") {
                                             Row {
                                                 TextField(
                                                     value = tag,
@@ -108,7 +153,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 Button(onClick = {
                                                     Log.d("add", "add")
-                                                    taggingMaterialViewModel.inputImageUri = ""
+
                                                     coroutineScope.launch {
                                                         withContext(Dispatchers.Default) {
                                                             taggingMaterialViewModel.insertTaggedImage(
@@ -117,6 +162,8 @@ class MainActivity : ComponentActivity() {
                                                                     tag1 = tag
                                                                 )
                                                             )
+                                                            taggingMaterialViewModel.inputImageUri =
+                                                                ""
                                                         }
                                                     }
                                                 }) {
@@ -135,11 +182,7 @@ class MainActivity : ComponentActivity() {
                         //ここのボタンの機能をアプリをスリープにしている状態でもフローティングボタンで使用できるようにしたい
                         FloatingActionButton(
                             onClick = {
-                                pickMedia.launch(
-                                    PickVisualMediaRequest(
-                                        ActivityResultContracts.PickVisualMedia.SingleMimeType("image/*")
-                                    )
-                                )
+                                checkImagePermissions()
                             },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)

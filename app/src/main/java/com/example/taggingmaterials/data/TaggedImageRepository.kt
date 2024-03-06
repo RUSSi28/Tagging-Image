@@ -6,4 +6,6 @@ interface TaggedImageRepository {
     suspend fun insertTaggedImage(taggedImage: TaggedImage)
     suspend fun deleteTaggedImage(taggedImage: TaggedImage)
     fun getTaggedImage() : Flow<List<TaggedImage>>
+
+    fun getTag(inputText: String) : Flow<List<String>>
 }

@@ -17,4 +17,11 @@ interface TaggedImageDao {
     //タグ付きの画像を取得するためのメソッド
     @Query("SELECT * from image")
     fun getTaggedImages(): Flow<List<TaggedImage>>
+
+
+    //TODO: inputTextはinputText = "%${query}%"とする必要がある
+    @Query("""SELECT DISTINCT tag1 from image
+        WHERE tag1 LIKE :inputText
+    """)
+    fun getTag(inputText: String): Flow<List<String>>
 }
