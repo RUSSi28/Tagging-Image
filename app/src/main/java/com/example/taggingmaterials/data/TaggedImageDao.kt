@@ -16,12 +16,16 @@ interface TaggedImageDao {
     suspend fun deleteTaggedImage(taggedImage: TaggedImage)
     //タグ付きの画像を取得するためのメソッド
     @Query("SELECT * from image")
-    fun getTaggedImages(): Flow<List<TaggedImage>>
+    fun getAllTaggedImages(): Flow<List<TaggedImage>>
 
+    @Query("SELECT DISTINCT tag1 from image")
+    fun getAllTags(): Flow<List<String>>
+    @Query("SELECT * from image WHERE tag1 LIKE :tag1")
+    fun getAssignedTaggedImages(tag1: String): List<TaggedImage>
 
     //TODO: inputTextはinputText = "%${query}%"とする必要がある
     @Query("""SELECT DISTINCT tag1 from image
         WHERE tag1 LIKE :inputText
     """)
-    fun getTag(inputText: String): Flow<List<String>>
+    fun getTag(inputText: String): List<String>
 }

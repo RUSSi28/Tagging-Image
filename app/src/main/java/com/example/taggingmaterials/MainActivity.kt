@@ -1,6 +1,7 @@
 package com.example.taggingmaterials
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -45,7 +46,6 @@ import com.example.taggingmaterials.screen.MainScreen
 import com.example.taggingmaterials.ui.theme.TaggingMaterialsTheme
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,6 +97,8 @@ class MainActivity : ComponentActivity() {
         // photo picker.
         if (uri != null) {
             Log.d("PhotoPicker", "Selected URI: $uri")
+            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            contentResolver.takePersistableUriPermission(uri, takeFlags)
             taggingMaterialViewModel.inputImageUri = uri.toString()
         } else {
             Log.d("PhotoPicker", "No media selected")

@@ -1,6 +1,5 @@
 package com.example.taggingmaterials.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,11 +9,6 @@ import com.example.taggingmaterials.data.TaggedImage
 import com.example.taggingmaterials.data.TaggedImageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -25,26 +19,16 @@ class TaggingMaterialViewModel  @Inject constructor(
 ): ViewModel() {
     private var inputText by mutableStateOf("")
     private var isSearchBarActive by mutableStateOf(false)
-    private var wordList = taggedImageRepositoryImpl
-    var currentlyUsedImages = taggedImageRepositoryImpl.getTaggedImage()
-        .catch {
-            Log.e("CurrentlyUsedImages", "getTaggedImage failed: $it")
-            emit(emptyList())
-        }
-    .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = emptyList()
-        )
-    var queryTags = taggedImageRepositoryImpl.getTag(inputText)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = emptyList()
-        )
-    var focusedImage: TaggedImage? = null
+
+    var allTags = taggedImageRepositoryImpl.getAllTags()
+    var queryTags by mutableStateOf<List<String>>(emptyList())
+    var currentlyUsedImages = taggedImageRepositoryImpl.getAllTaggedImage()
+    var searchedImages by mutableStateOf<List<TaggedImage>>(emptyList())
 
     var inputImageUri by mutableStateOf("")
+
+    fun getTags() = taggedImageRepositoryImpl.getTag(inputText)
+    fun queryTags() = taggedImageRepositoryImpl.getTag(inputText)
 
     //Text Fieldのための関数群
     fun getInText() : String{
@@ -62,6 +46,13 @@ class TaggingMaterialViewModel  @Inject constructor(
 
     //URIの取得
     fun canGetUri() = inputImageUri != ""
+    fun getQueryTags() {
+        //getTagsの方がいい
+        queryTags = taggedImageRepositoryImpl.getTag(inputText)
+    }
+    fun getSearchedImages() {
+        searchedImages = taggedImageRepositoryImpl.getAssignedTaggedImages(inputText)
+    }
 
     //データ取得のための関数群
     suspend fun insertTaggedImage(taggedImage: TaggedImage) = taggedImageRepositoryImpl.insertTaggedImage(taggedImage)
@@ -70,6 +61,4 @@ class TaggingMaterialViewModel  @Inject constructor(
             taggedImageRepositoryImpl.deleteTaggedImage(taggedImage)
         }
     }
-
-    fun getTag() = taggedImageRepositoryImpl.getTag(inputText)
 }
