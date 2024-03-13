@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,7 +40,6 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-//    TODO : 検索語についてのナビゲーショングラフのさくせい
     taggingMaterialViewModel: TaggingMaterialViewModel, modifier: Modifier = Modifier
 ) {
 
@@ -91,9 +91,14 @@ fun MainScreen(
             if (taggingMaterialViewModel.getInText() == "") {
                 Column() {
                     for (tag in taggingMaterialViewModel.allTags.collectAsState(initial = emptyList()).value.toPersistentList()) {
-                        TextButton(onClick = {
-                            taggingMaterialViewModel.changeInputText(tag)
-                        }) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    onClick = { taggingMaterialViewModel.changeInputText(tag) }
+                                )
+                                .padding(8.dp)
+                        ) {
                             Text(text = tag)
                         }
                     }
@@ -170,7 +175,7 @@ fun ImageDetail(taggedImage: TaggedImage) {
             model = taggedImage.imageUri,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
