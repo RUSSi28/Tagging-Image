@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,11 +26,13 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.taggingmaterials.R
 import com.example.taggingmaterials.data.TaggedImage
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -120,12 +121,12 @@ fun MainScreen(
         //入力文字があるときはクエリ結果の画像を表示
         if (taggingMaterialViewModel.getInText() == "") {
             ImageGrid(
-                images = taggingMaterialViewModel.currentlyUsedImages.collectAsState(initial = emptyList()).value.toPersistentList(),
+                images = taggingMaterialViewModel.currentlyUsedImages.collectAsLazyPagingItems(),
                 taggingMaterialViewModel = taggingMaterialViewModel
             )
         } else {
             ImageGrid(
-                images = taggingMaterialViewModel.searchedImages.toPersistentList(),
+                images = taggingMaterialViewModel.currentlyUsedImages.collectAsLazyPagingItems(),
                 taggingMaterialViewModel = taggingMaterialViewModel
             )
         }
@@ -134,32 +135,36 @@ fun MainScreen(
 
 @Composable
 fun ImageGrid(
-    images: PersistentList<TaggedImage>, taggingMaterialViewModel: TaggingMaterialViewModel
+    images: LazyPagingItems<TaggedImage>, taggingMaterialViewModel: TaggingMaterialViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
-    if (images.isNotEmpty()) {
+    if (images.itemCount != 0) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2)
         ) {
-            items(items = images, key = { item -> item.id }) {
-                AsyncImage(
-                    model = it.imageUri,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    placeholder = ColorPainter(color = Color.LightGray),
-                    error = ColorPainter(color = Color.Black),
-                    modifier = Modifier
-                        .aspectRatio(1f)
-                        .clickable(onClick = {
-                            coroutineScope.launch {
-                                taggingMaterialViewModel.deleteTaggedImage(it)
-                            }
-                        })
-                    //TODO : NavigateでImageDetailコンポーザブルに遷移する
-                    //一度deleteにしておく
+            items(count = images.itemCount, key = images.itemKey()) {
+                //毎回nullでページングが入ってきてるのなぜなぜ
+                if(images[it] != null) {
 
-                )
-                Log.d("AsyncImage", "CurrentlyUsedImageGrid: ${it.imageUri} ")
+                    AsyncImage(
+                        model = images[it]?.imageUri,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        placeholder = ColorPainter(color = Color.LightGray),
+                        error = ColorPainter(color = Color.Black),
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .clickable(onClick = {
+                                coroutineScope.launch {
+                                    taggingMaterialViewModel.deleteTaggedImage(images[it]!!)
+                                }
+                            })
+                        //TODO : NavigateでImageDetailコンポーザブルに遷移する
+                        //一度deleteにしておく
+
+                    )
+                }
+                Log.d("AsyncImage", "CurrentlyUsedImageGrid: ${images[it]?.imageUri} ")
             }
         }
     } else {
