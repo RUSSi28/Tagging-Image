@@ -73,10 +73,8 @@ fun MainScreen(
                 //taggingViewModel.currentlyUsedImageの値をクエリの結果に置き換える
                 //Composableが使えないのでどうしよう
                 coroutineScope.launch {
-                    withContext(Dispatchers.Default) {
-                        taggingMaterialViewModel.getSearchedImages()
-                        taggingMaterialViewModel.changeIsSearchBarActive(false)
-                    }
+                    taggingMaterialViewModel.getSearchedImages()
+                    taggingMaterialViewModel.changeIsSearchBarActive(false)
                 }
             },
             active = taggingMaterialViewModel.getIsSearchBarActive(),
@@ -85,9 +83,6 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
-            //Contentは検索結果に応じた単語を含むタグ(それをもつ画像数も)をリスト形式で表示
-            //入力文字がないときは全てのタグを表示
-            //入力文字があるときはクエリ結果のタグを表示
             if (taggingMaterialViewModel.getInText() == "") {
                 Column() {
                     for (tag in taggingMaterialViewModel.allTags.collectAsState(initial = emptyList()).value.toPersistentList()) {
@@ -111,8 +106,6 @@ fun MainScreen(
             }
         }
 
-        //入力文字がないときは最近使った画像を表示
-        //入力文字があるときはクエリ結果の画像を表示
         if (taggingMaterialViewModel.getInText() == "") {
             ImageGrid(
                 images = taggingMaterialViewModel.currentlyUsedImages.collectAsState(initial = emptyList()).value.toPersistentList(),
@@ -159,18 +152,5 @@ fun ImageGrid(
         }
     } else {
         //TODO : emptyListの時にはローディングするようにする
-    }
-}
-
-
-@Composable
-fun ImageDetail(taggedImage: TaggedImage) {
-    Column {
-        AsyncImage(
-            model = taggedImage.imageUri,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-        )
     }
 }

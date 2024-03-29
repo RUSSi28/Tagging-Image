@@ -3,8 +3,10 @@ package com.example.taggingmaterials
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -38,11 +40,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.example.taggingmaterials.data.TaggedImage
 import com.example.taggingmaterials.screen.MainScreen
+import com.example.taggingmaterials.service.OverlayService
 import com.example.taggingmaterials.ui.theme.TaggingMaterialsTheme
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -54,6 +59,21 @@ import kotlinx.coroutines.withContext
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private val taggingMaterialViewModel: TaggingMaterialViewModel by viewModels()
+    private val pickMedia =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            // Callback is invoked after the user selects a media item or closes the
+            // photo picker.
+            if (uri != null) {
+                Log.d("PhotoPicker", "Selected URI: $uri")
+                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, takeFlags)
+                taggingMaterialViewModel.inputImageUri = uri.toString()
+            } else {
+                Log.d("PhotoPicker", "No media selected")
+            }
+        }
+
     private val requestImagePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             if (it) {
@@ -64,7 +84,7 @@ class MainActivity : ComponentActivity() {
                 )
             } else {
                 //TODO : 許可するように誘導するテキストの表示にする
-                val context : Context = this
+                val context: Context = this
                 Toast.makeText(context, R.string.app_name, Toast.LENGTH_SHORT).show()
             }
         }
@@ -91,24 +111,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val taggingMaterialViewModel: TaggingMaterialViewModel by viewModels()
-    private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        // Callback is invoked after the user selects a media item or closes the
-        // photo picker.
-        if (uri != null) {
-            Log.d("PhotoPicker", "Selected URI: $uri")
-            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            contentResolver.takePersistableUriPermission(uri, takeFlags)
-            taggingMaterialViewModel.inputImageUri = uri.toString()
-        } else {
-            Log.d("PhotoPicker", "No media selected")
-        }
-    }
-
-
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startService(Intent(this, OverlayService::class.java))
         setContent {
             TaggingMaterialsTheme {
                 // A surface container using the 'background' color from the theme
@@ -117,15 +123,11 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     val coroutineScope = rememberCoroutineScope()
-                    ContextCompat.startForegroundService(this, intent)
-                    // or
-                    // startService(intent)           // for android version lower than 8.0 (android O)
-                    // startForegroundService(intent) // for android 8.0 and higher
                     Box {
                         MainScreen(taggingMaterialViewModel)
                         if (taggingMaterialViewModel.canGetUri()) {
                             var tag by remember { mutableStateOf("") }
-                            AlertDialog(
+                            Dialog(
                                 onDismissRequest = { taggingMaterialViewModel.inputImageUri = "" },
                             ) {
                                 Card(
@@ -157,16 +159,13 @@ class MainActivity : ComponentActivity() {
                                                     Log.d("add", "add")
 
                                                     coroutineScope.launch {
-                                                        withContext(Dispatchers.Default) {
-                                                            taggingMaterialViewModel.insertTaggedImage(
-                                                                TaggedImage(
-                                                                    imageUri = taggingMaterialViewModel.inputImageUri,
-                                                                    tag1 = tag
-                                                                )
+                                                        taggingMaterialViewModel.insertTaggedImage(
+                                                            TaggedImage(
+                                                                imageUri = taggingMaterialViewModel.inputImageUri,
+                                                                tag1 = tag
                                                             )
-                                                            taggingMaterialViewModel.inputImageUri =
-                                                                ""
-                                                        }
+                                                        )
+                                                        taggingMaterialViewModel.inputImageUri = ""
                                                     }
                                                 }) {
                                                     Icon(

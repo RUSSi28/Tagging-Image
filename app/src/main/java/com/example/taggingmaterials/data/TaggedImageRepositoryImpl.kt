@@ -1,22 +1,29 @@
 package com.example.taggingmaterials.data
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
-
 class TaggedImageRepositoryImpl @Inject constructor(
     private val taggedImageDao: TaggedImageDao
 ) : TaggedImageRepository {
     override suspend fun insertTaggedImage(taggedImage: TaggedImage) =
-        taggedImageDao.insertTaggedImage(taggedImage)
+        withContext(Dispatchers.IO) {
+            taggedImageDao.insertTaggedImage(taggedImage)
+        }
 
     override suspend fun deleteTaggedImage(taggedImage: TaggedImage) =
-        taggedImageDao.deleteTaggedImage(taggedImage)
+        withContext(Dispatchers.IO) {
+            taggedImageDao.deleteTaggedImage(taggedImage)
+        }
 
     override fun getAllTags(): Flow<List<String>> = taggedImageDao.getAllTags()
     override fun getAllTaggedImage(): Flow<List<TaggedImage>> = taggedImageDao.getAllTaggedImages()
 
-    override fun getAssignedTaggedImages(tag: String): List<TaggedImage> {
-        return taggedImageDao.getAssignedTaggedImages(tag)
+    override suspend fun getAssignedTaggedImages(tag: String): List<TaggedImage> {
+        return withContext(Dispatchers.IO) {
+            taggedImageDao.getAssignedTaggedImages(tag)
+        }
     }
 
     override fun getTag(inputText: String): List<String> {
@@ -24,3 +31,4 @@ class TaggedImageRepositoryImpl @Inject constructor(
         return taggedImageDao.getTag(queryInput)
     }
 }
+

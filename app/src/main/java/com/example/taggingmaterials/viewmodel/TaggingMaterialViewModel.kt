@@ -50,15 +50,12 @@ class TaggingMaterialViewModel  @Inject constructor(
         //getTagsの方がいい
         queryTags = taggedImageRepositoryImpl.getTag(inputText)
     }
-    fun getSearchedImages() {
+    suspend fun getSearchedImages() {
         searchedImages = taggedImageRepositoryImpl.getAssignedTaggedImages(inputText)
     }
 
     //データ取得のための関数群
     suspend fun insertTaggedImage(taggedImage: TaggedImage) = taggedImageRepositoryImpl.insertTaggedImage(taggedImage)
-    suspend fun deleteTaggedImage(taggedImage: TaggedImage) = viewModelScope.launch {
-        withContext(Dispatchers.Default) {
-            taggedImageRepositoryImpl.deleteTaggedImage(taggedImage)
-        }
-    }
+    suspend fun deleteTaggedImage(taggedImage: TaggedImage) =
+        taggedImageRepositoryImpl.deleteTaggedImage(taggedImage)
 }
