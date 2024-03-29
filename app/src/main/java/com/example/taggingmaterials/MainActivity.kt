@@ -3,10 +3,7 @@ package com.example.taggingmaterials
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -22,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,8 +26,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
@@ -51,9 +44,7 @@ import com.example.taggingmaterials.service.OverlayService
 import com.example.taggingmaterials.ui.theme.TaggingMaterialsTheme
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 @AndroidEntryPoint
@@ -89,13 +80,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
     private fun checkImagePermissions() {
         val context: Context = applicationContext
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            android.Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
-        }
+        val permission = android.Manifest.permission.READ_MEDIA_IMAGES
         if (ContextCompat.checkSelfPermission(
                 context,
                 permission
@@ -115,6 +103,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startService(Intent(this, OverlayService::class.java))
+
         setContent {
             TaggingMaterialsTheme {
                 // A surface container using the 'background' color from the theme
@@ -141,12 +130,6 @@ class MainActivity : ComponentActivity() {
                                                     model = taggingMaterialViewModel.inputImageUri,
                                                     contentDescription = null
                                                 )
-                                                TextButton(
-                                                    onClick = { /*TODO*/ },
-                                                    modifier = Modifier.align(Alignment.BottomEnd)
-                                                ) {
-                                                    Text(text = "add")
-                                                }
                                             }
                                         }
                                         item(key = "TextField") {
@@ -199,5 +182,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
 
