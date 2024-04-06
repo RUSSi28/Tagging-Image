@@ -18,7 +18,7 @@ object TaggedImageDatabaseModule {
     @Provides
     fun provideDatabase(
         @ApplicationContext context: Context
-    ) = Room.databaseBuilder(context, TaggedImageDatabase::class.java, "taggedImage_db").build()
+    ) = Room.databaseBuilder(context, TaggedImageDatabase::class.java, "taggedImage_db").fallbackToDestructiveMigration().build()
 
     @Singleton
     @Provides

@@ -53,15 +53,15 @@ fun MainScreen(
                 )
             },
             //TODO: クエリした文字をテキストボタンにしてタップしたらqueryの文字列をそれに入れ替えるようにする
-            query = taggingMaterialViewModel.getInText(),
+            query = taggingMaterialViewModel.inputText,
             onQueryChange = {
-                taggingMaterialViewModel.changeInputText(it)
+                taggingMaterialViewModel.inputText = it
                 coroutineScope.launch(Dispatchers.Default) {
                     taggingMaterialViewModel.getQueryTags()
                 }
             },
             placeholder = {
-                if (taggingMaterialViewModel.getInText() == "") {
+                if (taggingMaterialViewModel.inputText == "") {
                     Text(
                         text = "Recently Used", color = Color.Gray
                     )
@@ -82,14 +82,14 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
-            if (taggingMaterialViewModel.getInText() == "") {
+            if (taggingMaterialViewModel.inputText == "") {
                 Column() {
                     for (tag in taggingMaterialViewModel.allTags.collectAsState(initial = emptyList()).value.toPersistentList()) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    onClick = { taggingMaterialViewModel.changeInputText(tag) }
+                                    onClick = { taggingMaterialViewModel.inputText = tag }
                                 )
                                 .padding(8.dp)
                         ) {
@@ -101,7 +101,7 @@ fun MainScreen(
                 Column() {
                     for (tag in taggingMaterialViewModel.queryTags) {
                         TextButton(onClick = {
-                            taggingMaterialViewModel.changeInputText(tag)
+                            taggingMaterialViewModel.inputText = tag
                         }) {
                             Text(text = tag)
                         }
@@ -110,7 +110,7 @@ fun MainScreen(
             }
         }
 
-        if (taggingMaterialViewModel.getInText() == "") {
+        if (taggingMaterialViewModel.inputText == "") {
             ImageGrid(
                 images = taggingMaterialViewModel.currentlyUsedImages.collectAsLazyPagingItems(),
                 taggingMaterialViewModel = taggingMaterialViewModel

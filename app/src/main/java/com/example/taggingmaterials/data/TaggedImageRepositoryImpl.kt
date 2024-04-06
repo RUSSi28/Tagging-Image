@@ -18,7 +18,9 @@ class TaggedImageRepositoryImpl @Inject constructor(
         }
 
     override fun getAllTags(): Flow<List<String>> = taggedImageDao.getAllTags()
-    override fun getTaggedImage(id: Int): List<TaggedImage> = taggedImageDao.getTaggedImages(id)
+
+    override fun getTaggedImageFirst(): List<TaggedImage>? = taggedImageDao.getTaggedImageFirst()
+    override fun getTaggedImageAfter(timeStamp: Long): List<TaggedImage>? = taggedImageDao.getTaggedImagesAfter(timeStamp = timeStamp)
 
     override suspend fun getAssignedTaggedImages(tag: String): List<TaggedImage> {
         return withContext(Dispatchers.IO) {

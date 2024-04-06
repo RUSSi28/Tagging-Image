@@ -18,8 +18,10 @@ interface TaggedImageDao {
     suspend fun getAssignedTaggedImages(tag1: String): List<TaggedImage>
 
     //タグ付きの画像を取得するためのメソッド
-    @Query("SELECT * from image WHERE id = :id Limit 10")
-    fun getTaggedImages(id: Int): List<TaggedImage>
+    @Query("SELECT * from image ORDER BY timestamp ASC Limit 10")
+    fun getTaggedImageFirst(): List<TaggedImage>?
+    @Query("SELECT * from image WHERE timeStamp > :timeStamp ORDER BY timestamp ASC Limit 10")
+    fun getTaggedImagesAfter(timeStamp: Long): List<TaggedImage>?
 
     @Query("SELECT DISTINCT tag1 from image")
     fun getAllTags(): Flow<List<String>>

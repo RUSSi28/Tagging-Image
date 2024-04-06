@@ -18,7 +18,7 @@ import javax.inject.Inject
 class TaggingMaterialViewModel @Inject constructor(
     private val taggedImageRepository: TaggedImageRepository
 ) : ViewModel() {
-    private var inputText by mutableStateOf("")
+    var inputText by mutableStateOf("")
     private var isSearchBarActive by mutableStateOf(false)
 
     var allTags = taggedImageRepository.getAllTags()
@@ -35,15 +35,6 @@ class TaggingMaterialViewModel @Inject constructor(
     var searchedImages by mutableStateOf<List<TaggedImage>>(emptyList())
 
     var inputImageUri by mutableStateOf("")
-
-    //Text Fieldのための関数群
-    fun getInText(): String {
-        return inputText
-    }
-
-    fun changeInputText(input: String) {
-        inputText = input
-    }
 
     fun getIsSearchBarActive(): Boolean {
         return isSearchBarActive

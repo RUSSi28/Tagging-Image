@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +33,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
@@ -45,6 +46,7 @@ import com.example.taggingmaterials.ui.theme.TaggingMaterialsTheme
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Date
 
 
 @AndroidEntryPoint
@@ -99,7 +101,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startService(Intent(this, OverlayService::class.java))
@@ -115,7 +116,7 @@ class MainActivity : ComponentActivity() {
                     Box {
                         MainScreen(taggingMaterialViewModel)
                         if (taggingMaterialViewModel.canGetUri()) {
-                            var tag by remember { mutableStateOf("") }
+                            var textState by remember{ mutableStateOf(TextFieldValue("")) }
                             Dialog(
                                 onDismissRequest = { taggingMaterialViewModel.inputImageUri = "" },
                             ) {
@@ -135,8 +136,10 @@ class MainActivity : ComponentActivity() {
                                         item(key = "TextField") {
                                             Row {
                                                 TextField(
-                                                    value = tag,
-                                                    onValueChange = { tag = it }
+                                                    value = textState,
+                                                    onValueChange = { newValue ->
+                                                        textState = newValue.copy(selection = TextRange(newValue.text.length))
+                                                    }
                                                 )
                                                 Button(onClick = {
                                                     Log.d("add", "add")
@@ -144,8 +147,9 @@ class MainActivity : ComponentActivity() {
                                                     coroutineScope.launch {
                                                         taggingMaterialViewModel.insertTaggedImage(
                                                             TaggedImage(
+                                                                timestamp = Date().time,
                                                                 imageUri = taggingMaterialViewModel.inputImageUri,
-                                                                tag1 = tag
+                                                                tag1 = textState.text
                                                             )
                                                         )
                                                         taggingMaterialViewModel.inputImageUri = ""

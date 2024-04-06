@@ -10,23 +10,24 @@ import javax.inject.Inject
 
 class TaggingImagePagingSource @Inject constructor(
     private val taggedImageRepository: TaggedImageRepository
-) : PagingSource<Int, TaggedImage>() {
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, TaggedImage> {
+) : PagingSource<Long, TaggedImage>() {
+    override suspend fun load(params: LoadParams<Long>): LoadResult<Long, TaggedImage> {
         val paramsKey = params.key
-        val response = paramsKey?.let {
+        var response = paramsKey?.let {
             withContext(Dispatchers.IO) {
-                taggedImageRepository.getTaggedImage(it)
+                taggedImageRepository.getTaggedImageAfter(it.toLong())
             }
         } ?: run {
             withContext(Dispatchers.IO) {
-                taggedImageRepository.getTaggedImage(1)
+                taggedImageRepository.getTaggedImageFirst()
             }
         }
+        val nextKey: Long? = response?.lastOrNull()?.timestamp
 
-        val nextKey: Int? = response.lastOrNull()?.let {
-            it.id + 1
+
+        if (response == null) {
+            response = emptyList()
         }
-
         return try {
             LoadResult.Page(
                 data = response,
@@ -38,7 +39,7 @@ class TaggingImagePagingSource @Inject constructor(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, TaggedImage>): Int? {
+    override fun getRefreshKey(state: PagingState<Long, TaggedImage>): Long? {
         return null
     }
 }
