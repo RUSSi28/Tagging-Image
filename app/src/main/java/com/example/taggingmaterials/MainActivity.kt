@@ -26,10 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.taggingmaterials.data.TaggedImage
 import com.example.taggingmaterials.screen.MainScreen
@@ -45,7 +46,6 @@ import com.example.taggingmaterials.service.OverlayService
 import com.example.taggingmaterials.ui.theme.TaggingMaterialsTheme
 import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import java.util.Date
 
 
@@ -112,60 +112,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    val coroutineScope = rememberCoroutineScope()
                     Box {
                         MainScreen(taggingMaterialViewModel)
-                        if (taggingMaterialViewModel.canGetUri()) {
-                            var textState by remember{ mutableStateOf(TextFieldValue("")) }
-                            Dialog(
-                                onDismissRequest = { taggingMaterialViewModel.inputImageUri = "" },
-                            ) {
-                                Card(
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    LazyColumn() {
-                                        item {
-                                            Box(
-                                            ) {
-                                                AsyncImage(
-                                                    model = taggingMaterialViewModel.inputImageUri,
-                                                    contentDescription = null
-                                                )
-                                            }
-                                        }
-                                        item(key = "TextField") {
-                                            Row {
-                                                TextField(
-                                                    value = textState,
-                                                    onValueChange = { newValue ->
-                                                        textState = newValue.copy(selection = TextRange(newValue.text.length))
-                                                    }
-                                                )
-                                                Button(onClick = {
-                                                    Log.d("add", "add")
-
-                                                    coroutineScope.launch {
-                                                        taggingMaterialViewModel.insertTaggedImage(
-                                                            TaggedImage(
-                                                                timestamp = Date().time,
-                                                                imageUri = taggingMaterialViewModel.inputImageUri,
-                                                                tag1 = textState.text
-                                                            )
-                                                        )
-                                                        taggingMaterialViewModel.inputImageUri = ""
-                                                    }
-                                                }) {
-                                                    Icon(
-                                                        imageVector = Icons.Filled.Add,
-                                                        contentDescription = "Floating action button."
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        CheckPermissionDialog()
 
                         //ここのボタンの機能をアプリをスリープにしている状態でもフローティングボタンで使用できるようにしたい
                         FloatingActionButton(
@@ -187,5 +136,62 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+}
+
+
+@Composable
+private fun CheckPermissionDialog(
+    taggingMaterialViewModel: TaggingMaterialViewModel = viewModel()
+) {
+    if (taggingMaterialViewModel.canGetUri()) {
+        var textState by remember { mutableStateOf(TextFieldValue("")) }
+        Dialog(
+            onDismissRequest = { taggingMaterialViewModel.inputImageUri = "" },
+        ) {
+            Card(
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                LazyColumn() {
+                    item {
+                        Box(
+                        ) {
+                            AsyncImage(
+                                model = taggingMaterialViewModel.inputImageUri,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                    item(key = "TextField") {
+                        Row {
+                            TextField(
+                                value = textState,
+                                onValueChange = { newValue ->
+                                    textState = newValue.copy(
+                                        selection = TextRange(newValue.text.length)
+                                    )
+                                }
+                            )
+                            Button(onClick = {
+                                taggingMaterialViewModel.insertTaggedImage(
+                                    TaggedImage(
+                                        timestamp = Date().time,
+                                        imageUri = taggingMaterialViewModel.inputImageUri,
+                                        tag1 = textState.text
+                                    )
+                                )
+                                taggingMaterialViewModel.inputImageUri = ""
+
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Floating action button."
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 

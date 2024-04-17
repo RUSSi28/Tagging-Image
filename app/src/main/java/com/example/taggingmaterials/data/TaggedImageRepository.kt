@@ -12,5 +12,8 @@ interface TaggedImageRepository {
     fun getTaggedImageFirst() : List<TaggedImage>?
     fun getTaggedImageAfter(timeStamp: Long) : List<TaggedImage>?
 
+    suspend fun updateTaggedImage(image: TaggedImage)
+
+
     fun getTag(inputText: String) : List<String>
 }

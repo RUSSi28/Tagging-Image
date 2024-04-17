@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -35,11 +36,12 @@ import com.example.taggingmaterials.viewmodel.TaggingMaterialViewModel
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    taggingMaterialViewModel: TaggingMaterialViewModel, modifier: Modifier = Modifier
+    taggingMaterialViewModel: TaggingMaterialViewModel = viewModel()
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -49,7 +51,7 @@ fun MainScreen(
                 Image(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(id = R.string.search_text_field),
-                    modifier = modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp)
                 )
             },
             //TODO: クエリした文字をテキストボタンにしてタップしたらqueryの文字列をそれに入れ替えるようにする
@@ -83,7 +85,7 @@ fun MainScreen(
                 .padding(bottom = 8.dp)
         ) {
             if (taggingMaterialViewModel.inputText == "") {
-                Column() {
+                Column {
                     for (tag in taggingMaterialViewModel.allTags.collectAsState(initial = emptyList()).value.toPersistentList()) {
                         Column(
                             modifier = Modifier
@@ -98,7 +100,7 @@ fun MainScreen(
                     }
                 }
             } else {
-                Column() {
+                Column {
                     for (tag in taggingMaterialViewModel.queryTags) {
                         TextButton(onClick = {
                             taggingMaterialViewModel.inputText = tag
@@ -128,15 +130,13 @@ fun MainScreen(
 fun ImageGrid(
     images: LazyPagingItems<TaggedImage>, taggingMaterialViewModel: TaggingMaterialViewModel
 ) {
-    val coroutineScope = rememberCoroutineScope()
     if (images.itemCount != 0) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2)
         ) {
             items(count = images.itemCount, key = images.itemKey()) {
-                Log.d("MainScreen", "ImageGrid: ${images[it]}")
-                //毎回nullでページングが入ってきてるのなぜなぜ
-                if (images[it] != null) {
+                val image = images[it]
+                if (image != null) {
 
                     AsyncImage(
                         model = images[it]?.imageUri,
@@ -146,14 +146,13 @@ fun ImageGrid(
                         error = ColorPainter(color = Color.Black),
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .clickable(onClick = {
-                                coroutineScope.launch {
-                                    taggingMaterialViewModel.deleteTaggedImage(images[it]!!)
+                            .clickable(
+                                onClick = {
+                                    val updateImage = image.copy(timestamp = Date().time)
+                                    taggingMaterialViewModel.updateTaggedImage(updateImage)
+                                    Log.d("AsyncImage", "ImageGrid: tapped")
                                 }
-                            })
-                        //TODO : NavigateでImageDetailコンポーザブルに遷移する
-                        //一度deleteにしておく
-
+                            )
                     )
                 }
                 Log.d("AsyncImage", "CurrentlyUsedImageGrid: ${images[it]?.imageUri} ")

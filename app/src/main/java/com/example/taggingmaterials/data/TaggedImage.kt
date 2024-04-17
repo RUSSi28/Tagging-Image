@@ -6,7 +6,9 @@ import androidx.room.PrimaryKey
 
 @Entity("image")
 data class TaggedImage(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo
     val timestamp: Long,
     @ColumnInfo
     val imageUri: String,

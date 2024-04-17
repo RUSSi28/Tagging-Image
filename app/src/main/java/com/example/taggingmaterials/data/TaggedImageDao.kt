@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,6 +23,10 @@ interface TaggedImageDao {
     fun getTaggedImageFirst(): List<TaggedImage>?
     @Query("SELECT * from image WHERE timeStamp > :timeStamp ORDER BY timestamp ASC Limit 10")
     fun getTaggedImagesAfter(timeStamp: Long): List<TaggedImage>?
+
+    @Update
+    suspend fun updateTaggedImage(image: TaggedImage)
+
 
     @Query("SELECT DISTINCT tag1 from image")
     fun getAllTags(): Flow<List<String>>
